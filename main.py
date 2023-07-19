@@ -36,6 +36,7 @@ class World():
                     self.tl.append(box)
                 col += 1
             row += 1
+        self.data = {} # Clear
     
     def drawGrid(self):
         global ts, w, h, screen
@@ -100,7 +101,7 @@ class Player():
     def __init__(self, x, y):
         global ts
         super().__init__()
-        self.image = pygame.Surface((ts, ts))
+        self.image = pygame.Surface((40, 40))
         self.image.fill((255, 255, 150))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = [x, y]
@@ -124,7 +125,7 @@ class Player():
         if self.vely > 10:
             self.vely = 10
         dy += self.vely
-        
+        self.onGroundCheck()
         for i in world.tl:
             if i.rect.colliderect(self.rect.x + dx, self.rect.y, self.image.get_width(), self.image.get_height()):
                 dx = 0
@@ -136,14 +137,21 @@ class Player():
                 elif self.vely >= 0:
                     dy = i.rect.top - self.rect.bottom
                     self.vely = 0
+        
+        self.rect.move_ip([dx, dy])
+        screen.blit(self.image, self.rect)
+        
+    def onGroundCheck(self): # Bro Dupelicate :skull: #
+        global world
+        for i in world.tl:
+            if i.rect.colliderect(self.rect.x, self.rect.y + self.vely, self.image.get_width(), self.image.get_height()):
+                if self.vely >= 0:
                     self.onGround = True
                     break
             else:
                 self.onGround = False
-        
-        self.rect.move_ip([dx, dy])
-        screen.blit(self.image, self.rect)
-
+            
+    
 isRunning = True
 clock = pygame.time.Clock()
 world = World()
