@@ -26,8 +26,11 @@ class World():
         self.respawnPos = []
     
     def load(self, path):
-        global player
-        self.data = json.loads(open(path).read())
+        global player, w, h
+        try:
+            self.data = json.loads(open(path).read())
+        except FileNotFoundError:
+            self.data = {"respawnPos": [0, 0], "nextLvl": "", "data": [[0]*int(w/ts) for _ in range(int(h/ts))]}
         self.respawnPos = self.data["respawnPos"]
         self.nextLvl = self.data["nextLvl"]
         row = 0
