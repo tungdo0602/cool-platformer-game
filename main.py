@@ -11,9 +11,9 @@ class Box(pygame.Surface):
     def __init__(self, wh=(50, 50), type=1):
         global ts
         super().__init__(size=wh)
-        self.types = {1: (0, 0, 0), 2: (255, 0, 0), 3: (0, 0, 255), 4: (0, 255, 0)}
-        self.type = 0 if type >= len(self.types) else len(self.types) if type < 1 else type
-        self.fill(self.types[type])
+        self.types = {1: (0, 0, 0), 2: (255, 0, 0), 3: (0, 0, 255), 4: (0, 255, 0), 5: (255, 255, 0)}
+        self.type = 1 if type > len(self.types) else len(self.types) if type < 1 else type
+        self.fill(self.types[self.type])
         self.rect = self.get_rect()
 
 class World():
@@ -22,11 +22,16 @@ class World():
         self.data = {}
         self.tl = []
         self.debug = False
+        self.nextLvl = ""
+        self.respawnPos = []
     
     def load(self, path):
-        self.data = json.loads(open(path).read())["data"]
+        global player
+        self.data = json.loads(open(path).read())
+        self.respawnPos = self.data["respawnPos"]
+        self.nextLvl = self.data["nextLvl"]
         row = 0
-        for i in self.data:
+        for i in self.data["data"]:
             col = 0
             for j in i:
                 if j != 0:
@@ -76,12 +81,16 @@ class World():
             self.tl[boxPos] = box
             
     def convertToData(self):
-        global ts, w, h
+        global ts, w, h, player
         data = [[0]*int(w/ts) for _ in range(int(h/ts))]
         for i in self.tl:
-            x, y = map((lambda i: int(i)-1), [i.rect.x / ts, i.rect.y / ts])
+            x, y = map((lambda i: int(i)), [i.rect.x / ts, i.rect.y / ts])
             data[y][x] = i.type
-        return {"data": data}
+        return {
+            "respawnPos": player.respawnPos,
+            "nextLvl": "",
+            "data": data
+        }
     
     def exportToFile(self):
         with open("custom_level.json", "w") as f:
@@ -107,56 +116,86 @@ class Player():
         self.rect.x, self.rect.y = [x, y]
         self.vely = 0
         self.speed = 5
-        self.jumped = False
         self.onGround = False
+        self.inWater = False
+        self.respawnPos = [x, y]
     
     def update(self):
         global screen, w, h, world, ts
-        dy = dx = 0
         keys = pygame.key.get_pressed()
         
+        dx = dy = 0
+        
+        currentSpeed = self.speed / 2 if self.inWater else self.speed
+        
         if keys[pygame.K_RIGHT] or keys[pygame.K_LEFT]:
-            dx += self.speed if keys[pygame.K_RIGHT] else -self.speed
+            dx += currentSpeed if keys[pygame.K_RIGHT] else -currentSpeed
             
         if keys[pygame.K_UP] and self.onGround:
-            self.vely = -15
+            self.vely = -5 if self.inWater else -15
         
-        self.vely += 1
+        self.vely += 0.25 if self.inWater else 1
         if self.vely > 10:
             self.vely = 10
         dy += self.vely
-        self.onGroundCheck()
+        self.coolStuffsChecker()
         for i in world.tl:
-            if i.rect.colliderect(self.rect.x + dx, self.rect.y, self.image.get_width(), self.image.get_height()):
-                dx = 0
             
-            if i.rect.colliderect(self.rect.x, self.rect.y + self.vely, self.image.get_width(), self.image.get_height()):
-                if self.vely < 0:
-                    dy = i.rect.bottom - self.rect.top
-                    self.vely = 0
-                elif self.vely >= 0:
-                    dy = i.rect.top - self.rect.bottom
-                    self.vely = 0
+            if i.type == 1:
+                if i.rect.colliderect(self.rect.x + dx, self.rect.y, self.image.get_width(), self.image.get_height()):
+                    dx = 0
+            
+                if i.rect.colliderect(self.rect.x, self.rect.y + self.vely, self.image.get_width(), self.image.get_height()):
+                    if self.vely < 0:
+                        dy = i.rect.bottom - self.rect.top
+                        self.vely = 0
+                    elif self.vely >= 0:
+                        dy = i.rect.top - self.rect.bottom
+                        self.vely = 0
+            elif pygame.sprite.collide_rect(i, self):
+                if i.type == 2:
+                    self.respawn()
+                elif i.type == 4 and world.nextLvl:
+                    newWorld = World()
+                    newWorld.load(world.nextLvl)
+                    world = newWorld
+                    self.setRespawnPos(*world.respawnPos)
+                    self.respawn()
+                elif i.type == 5:
+                    self.vely = -25
         
         self.rect.move_ip([dx, dy])
         screen.blit(self.image, self.rect)
         
-    def onGroundCheck(self): # Bro Dupelicate :skull: #
+    def coolStuffsChecker(self): # Bro Dupelicate :skull: #
         global world
         for i in world.tl:
-            if i.rect.colliderect(self.rect.x, self.rect.y + self.vely, self.image.get_width(), self.image.get_height()):
-                if self.vely >= 0:
-                    self.onGround = True
+            if i.type == 1:
+                if i.rect.colliderect(self.rect.x, self.rect.y + self.vely, self.image.get_width(), self.image.get_height()):
+                    if self.vely >= 0:
+                        self.onGround = True
+                        break
+                else:
+                    self.onGround = False
+            if pygame.sprite.collide_rect(i, self):
+                if i.type == 3:
+                    self.inWater = self.onGround = True
                     break
             else:
-                self.onGround = False
+                self.inWater = False
+    
+    def respawn(self):
+        self.rect.x, self.rect.y = self.respawnPos
+        
+    def setRespawnPos(self, x, y):
+        self.respawnPos = [x, y]
             
     
 isRunning = True
 clock = pygame.time.Clock()
 world = World()
-#world.load()
-player = Player(100, 100)
+world.load("./levels/lvl_1.json")
+player = Player(*world.respawnPos)
 while isRunning:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -167,14 +206,15 @@ while isRunning:
             if world.debug:
                 if event.key == pygame.K_F7:
                     world.exportToFile()
+                    print("Saved! Check custom_level.json")
                 if event.key == pygame.K_F9:
                     world.clear()
                 if event.key == pygame.K_e:
                     world.editBoxState()
                 if event.key == pygame.K_r:
                     player.rect.x = player.rect.y = 100
-        # if event.type == pygame.MOUSEWHEEL and world.debug:
-        #     world.editBoxState(-1 if event.y < 0 else 1)
+        if event.type == pygame.MOUSEWHEEL and world.debug:
+            world.editBoxState(-1 if event.y < 0 else 1)
 
     mouse = pygame.mouse.get_pressed()
     if world.debug:
