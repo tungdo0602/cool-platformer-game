@@ -165,7 +165,7 @@ class Player():
                     self.setRespawnPos(*world.respawnPos)
                     self.respawn()
                 elif i.type == 5:
-                    self.vely = -25
+                    self.vely = -20
         
         self.rect.move_ip([dx, dy])
         screen.blit(self.image, self.rect)
@@ -214,8 +214,8 @@ while isRunning:
                     world.clear()
                 if event.key == pygame.K_e:
                     world.editBoxState()
-                if event.key == pygame.K_r:
-                    player.rect.x = player.rect.y = 100
+            if event.key == pygame.K_r:
+                player.respawn()
         if event.type == pygame.MOUSEWHEEL and world.debug:
             world.editBoxState(-1 if event.y < 0 else 1)
 
