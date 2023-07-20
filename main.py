@@ -102,7 +102,7 @@ class World():
         global ts, w, h, player
         data = [[0]*int(w/ts) for _ in range(int(h/ts))]
         for i in self.tl:
-            x, y = map((lambda i: int(i)), [i.rect.x / ts, i.rect.y / ts])
+            x, y = map((lambda i: int(i)-1), [i.rect.x / ts, i.rect.y / ts])
             data[y][x] = i.type
         return {
             "respawnPos": player.respawnPos,
@@ -115,7 +115,10 @@ class World():
             f.write(json.dumps(world.convertToData()))
 
     def clear(self):
+        global player
         self.tl = []
+        self.nextLvl = ""
+        player.setRespawnPos(0, 0)
     
     def update(self):
         global screen
