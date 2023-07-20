@@ -26,7 +26,7 @@ class World():
         self.respawnPos = []
     
     def load(self, path):
-        global player, w, h
+        global w, h
         try:
             self.data = json.loads(open(path).read())
         except FileNotFoundError:
@@ -58,14 +58,18 @@ class World():
                 return i
         return False
     
-    def placeBox(self):
-        global ts, w, h
+    def placeBox(self, newSpawnPoint=False):
+        global ts, w, h, player
         x, y = map((lambda i: (i//ts)*ts), pygame.mouse.get_pos())
         if type(self.containBox(x, y)) != int and x <= w and y <= h:
-            box = Box((ts, ts))
-            box.rect.x = x
-            box.rect.y = y
-            self.tl.append(box)
+            if newSpawnPoint:
+                player.setRespawnPos(x, y)
+            else:
+                box = Box((ts, ts))
+                box.rect.x = x
+                box.rect.y = y
+                self.tl.append(box)
+        return (x, y)
             
     def deleteBox(self):
         global ts
@@ -216,14 +220,20 @@ while isRunning:
                     world.editBoxState()
             if event.key == pygame.K_r:
                 player.respawn()
-        if event.type == pygame.MOUSEWHEEL and world.debug:
-            world.editBoxState(-1 if event.y < 0 else 1)
+        if world.debug:
+            if event.type == pygame.MOUSEWHEEL:
+                world.editBoxState(-1 if event.y < 0 else 1)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 2: # Middle click #
+                    x, y = world.placeBox(True)
+                    print("Set new spawn point to:", x, y)
 
-    mouse = pygame.mouse.get_pressed()
+    mousePressed = pygame.mouse.get_pressed()
+    keyPressed = pygame.key.get_pressed()
     if world.debug:
-        if mouse[0]:
+        if mousePressed[0]:
             world.placeBox()
-        elif mouse[2]:
+        elif mousePressed[2]:
             world.deleteBox()
     
     #BG Handler
