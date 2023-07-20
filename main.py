@@ -148,8 +148,8 @@ class Player():
         currentSpeed = self.speed / 2 if self.inWater else self.speed
         
         if keys[pygame.K_RIGHT] or keys[pygame.K_LEFT]:
-            if time.time() - self.now > 0.3:
-                Sound("./assets/Sounds/walk.wav", 0.25).play()
+            if time.time() - self.now > 0.35 and self.onGround:
+                Sound("./assets/Sounds/walk.wav", 0.3).play()
                 self.now = time.time()
             dx += currentSpeed if keys[pygame.K_RIGHT] else -currentSpeed
             
