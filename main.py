@@ -4,7 +4,8 @@ pygame.init()
 
 w, h = [800, 500]
 screen = pygame.display.set_mode((w, h), vsync=1)
-pygame.display.set_caption("Bro FR")
+pygame.display.set_caption("Cool Platformer :O")
+pygame.display.set_icon(pygame.image.load("./assets/icon.png"))
 ts = 50
 
 class Box(pygame.Surface):
