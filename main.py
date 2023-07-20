@@ -6,7 +6,7 @@ w, h = [800, 500]
 screen = pygame.display.set_mode((w, h), vsync=1)
 pygame.display.set_caption("Cool Platformer :O")
 pygame.display.set_icon(pygame.image.load("./assets/icon.png"))
-ts = 50
+ts = 10
 
 class Box(pygame.Surface):
     def __init__(self, wh=(50, 50), type=1):
@@ -37,11 +37,12 @@ class World():
         self.respawnPos = []
     
     def load(self, path):
-        global w, h
+        global w, h, ts
         try:
             self.data = json.loads(open(path).read())
         except FileNotFoundError:
-            self.data = {"respawnPos": [0, 0], "nextLvl": "", "data": [[0]*int(w/ts) for _ in range(int(h/ts))]}
+            self.data = {"respawnPos": [0, 0], "blockSize": 50, "nextLvl": "", "data": [[0]*int(w/ts) for _ in range(int(h/ts))]}
+        ts = self.data["blockSize"]
         self.respawnPos = self.data["respawnPos"]
         self.nextLvl = self.data["nextLvl"]
         row = 0
@@ -106,6 +107,7 @@ class World():
             data[y][x] = i.type
         return {
             "respawnPos": player.respawnPos,
+            "blockSize": ts,
             "nextLvl": "",
             "data": data
         }
@@ -131,7 +133,8 @@ class Player():
     def __init__(self, x, y):
         global ts
         super().__init__()
-        self.image = pygame.Surface((40, 40))
+        self.playerts = ts / 100 * 80 # 80% #
+        self.image = pygame.Surface((self.playerts, self.playerts))
         self.image.fill((255, 255, 150))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = [x, y]
