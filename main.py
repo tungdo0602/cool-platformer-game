@@ -17,6 +17,16 @@ class Box(pygame.Surface):
         self.fill(self.types[self.type])
         self.rect = self.get_rect()
 
+class Sound():
+    def __init__(self, path, volume=1):
+        self.volume = volume
+        self.s = pygame.mixer.Sound(path)
+        self.s.set_volume(volume)
+        
+    def play(self):
+        self.s.play()
+        
+
 class World():
     def __init__(self):
         global ts
@@ -127,6 +137,7 @@ class Player():
         self.onGround = False
         self.inWater = False
         self.respawnPos = [x, y]
+        self.now = time.time()
     
     def update(self):
         global screen, w, h, world, ts
@@ -137,10 +148,17 @@ class Player():
         currentSpeed = self.speed / 2 if self.inWater else self.speed
         
         if keys[pygame.K_RIGHT] or keys[pygame.K_LEFT]:
+            if time.time() - self.now > 0.3:
+                Sound("./assets/Sounds/walk.wav", 0.25).play()
+                self.now = time.time()
             dx += currentSpeed if keys[pygame.K_RIGHT] else -currentSpeed
             
         if keys[pygame.K_UP] and self.onGround:
-            self.vely = -5 if self.inWater else -15
+            if self.inWater:
+                self.vely = -5
+            else:
+                Sound("./assets/Sounds/jump.wav").play()
+                self.vely = -15
         
         if not screen.get_rect().contains(self.rect):
             self.respawn()
@@ -165,14 +183,17 @@ class Player():
                         self.vely = 0
             elif pygame.sprite.collide_rect(i, self):
                 if i.type == 2:
+                    Sound("./assets/Sounds/crash.wav", 0.25).play()
                     self.respawn()
                 elif i.type == 4 and world.nextLvl:
+                    Sound("./assets/Sounds/nextLvl.wav", 0.25).play()
                     newWorld = World()
                     newWorld.load(world.nextLvl)
                     world = newWorld
                     self.setRespawnPos(*world.respawnPos)
                     self.respawn()
                 elif i.type == 5:
+                    Sound("./assets/Sounds/jumpPad.wav", 0.5).play()
                     self.vely = -20
         
         self.rect.move_ip([dx, dy])
@@ -197,6 +218,7 @@ class Player():
     
     def respawn(self):
         self.rect.x, self.rect.y = self.respawnPos
+        self.onGround = self.inWater = False # Reset state #
         
     def setRespawnPos(self, x, y):
         self.respawnPos = [x, y]
