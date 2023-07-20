@@ -138,6 +138,7 @@ class Player():
         self.inWater = False
         self.respawnPos = [x, y]
         self.now = time.time()
+        self.dx = 0
     
     def update(self):
         global screen, w, h, world, ts
@@ -167,6 +168,7 @@ class Player():
         if self.vely > 10:
             self.vely = 10
         dy += self.vely
+        self.dx = dx # Why idk WTF
         self.coolStuffsChecker()
         for i in world.tl:
             
@@ -203,6 +205,7 @@ class Player():
         global world
         for i in world.tl:
             if i.type == 1:
+                
                 if i.rect.colliderect(self.rect.x, self.rect.y + self.vely, self.image.get_width(), self.image.get_height()):
                     if self.vely >= 0:
                         self.onGround = True
