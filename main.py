@@ -142,6 +142,9 @@ class Player():
         if keys[pygame.K_UP] and self.onGround:
             self.vely = -5 if self.inWater else -15
         
+        if not screen.get_rect().contains(self.rect):
+            self.respawn()
+        
         self.vely += 0.25 if self.inWater else 1
         if self.vely > 10:
             self.vely = 10
@@ -185,7 +188,7 @@ class Player():
                         break
                 else:
                     self.onGround = False
-            if pygame.sprite.collide_rect(i, self):
+            if self.rect.colliderect(i.rect):
                 if i.type == 3:
                     self.inWater = self.onGround = True
                     break
