@@ -275,6 +275,9 @@ while isRunning:
                         world.clear()
                 if event.key == pygame.K_e:
                     world.editBoxState()
+                if event.key == pygame.K_g: # Middle click #
+                    x, y = world.placeBox(True)
+                    messagebox.showinfo("New spawn point", "Set new spawn point to: {0}, {1}".format(x, y))
             if event.key == pygame.K_r:
                 player.respawn()
         if world.debug:
@@ -283,7 +286,7 @@ while isRunning:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 2: # Middle click #
                     x, y = world.placeBox(True)
-                    print("Set new spawn point to:", x, y)
+                    messagebox.showinfo("New spawn point", "Set new spawn point to: {0}, {1}".format(x, y))
 
     mousePressed = pygame.mouse.get_pressed()
     keyPressed = pygame.key.get_pressed()
