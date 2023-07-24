@@ -249,6 +249,9 @@ clock = pygame.time.Clock()
 world = World()
 world.load("./levels/lvl_1.json")
 player = Player(*world.respawnPos)
+pygame.mixer.music.load("./assets/sounds/bg.wav")
+pygame.mixer.music.play(loops=-1)
+pygame.mixer.music.set_volume(1)
 while isRunning:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -258,6 +261,8 @@ while isRunning:
                 if messagebox.askyesno("Confirm", "Are you sure to update the level from the cloud?"):
                     gameTools.updateLevels()
                     messagebox.showinfo("Done!", "Levels are up-to-date!")
+            if event.key == pygame.K_F2:
+                pygame.mixer.music.set_volume(float(not pygame.mixer.music.get_volume()))
             if event.key == pygame.K_F5:
                 world.debug = not world.debug
             if world.debug:
