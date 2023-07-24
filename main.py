@@ -146,6 +146,7 @@ class Player():
         self.inWater = False
         self.respawnPos = [x, y]
         self.now = time.time()
+        self.die = False
     
     def update(self):
         global screen, w, h, world, ts
@@ -168,13 +169,14 @@ class Player():
                 Sound("./assets/Sounds/jump.wav").play()
                 self.vely = -15
         self.rect.x = 0 if self.rect.x < 0 else screen.get_width() if self.rect.x > screen.get_width() else self.rect.x
-        if self.rect.y > screen.get_height():
+        if self.rect.y > screen.get_height() or self.rect.y == -40:
+            self.die = True
             self.respawn()
         elif -40 < self.rect.y < 0:
             dy = screen.get_rect().bottom - self.rect.top
             self.vely = 0
-        elif self.rect.y == -40:
-            self.respawn()
+        else:
+            self.die = False
         
         self.vely += 0.25 if self.inWater else 1
         if self.vely > 10:
@@ -196,7 +198,7 @@ class Player():
                         self.vely = 0
             elif pygame.sprite.collide_rect(i, self):
                 if i.type == 2:
-                    Sound("./assets/Sounds/crash.wav", 0.25).play()
+                    self.die = True
                     self.respawn()
                 elif i.type == 4 and world.nextLvl:
                     Sound("./assets/Sounds/nextLvl.wav", 0.25).play()
@@ -208,6 +210,8 @@ class Player():
                 elif i.type == 5:
                     Sound("./assets/Sounds/jumpPad.wav", 0.5).play()
                     self.vely = -20
+                else:
+                    self.die = False
         
         self.rect.move_ip([dx, dy])
         screen.blit(self.image, self.rect)
@@ -231,6 +235,8 @@ class Player():
                 self.inWater = False
     
     def respawn(self):
+        if self.die:
+            Sound("./assets/Sounds/crash.wav", 0.25).play()
         self.rect.x, self.rect.y = self.respawnPos
         self.onGround = self.inWater = False # Reset state #
         
