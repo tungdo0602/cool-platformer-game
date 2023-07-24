@@ -146,7 +146,6 @@ class Player():
         self.inWater = False
         self.respawnPos = [x, y]
         self.now = time.time()
-        self.dx = 0
     
     def update(self):
         global screen, w, h, world, ts
@@ -168,15 +167,19 @@ class Player():
             else:
                 Sound("./assets/Sounds/jump.wav").play()
                 self.vely = -15
-        
-        if not screen.get_rect().contains(self.rect):
+        self.rect.x = 0 if self.rect.x < 0 else screen.get_width() if self.rect.x > screen.get_width() else self.rect.x
+        if self.rect.y > screen.get_height():
+            self.respawn()
+        elif -40 < self.rect.y < 0:
+            dy = screen.get_rect().bottom - self.rect.top
+            self.vely = 0
+        elif self.rect.y == -40:
             self.respawn()
         
         self.vely += 0.25 if self.inWater else 1
         if self.vely > 10:
             self.vely = 10
         dy += self.vely
-        self.dx = dx # Why idk WTF
         self.coolStuffsChecker()
         for i in world.tl:
             
