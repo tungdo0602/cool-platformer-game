@@ -1,4 +1,6 @@
 import pygame, json, time
+import gameTools
+from tkinter import messagebox, simpledialog
 
 pygame.init()
 
@@ -112,8 +114,8 @@ class World():
             "data": data
         }
     
-    def exportToFile(self):
-        with open("custom_level.json", "w") as f:
+    def exportToFile(self, filename):
+        with open(filename + ".json", "w") as f:
             f.write(json.dumps(world.convertToData()))
 
     def clear(self):
@@ -243,14 +245,20 @@ while isRunning:
         if event.type == pygame.QUIT:
             isRunning = False
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F1:
+                if messagebox.askyesno("Confirm", "Are you sure to update the level from the cloud?"):
+                    gameTools.updateLevels()
+                    messagebox.showinfo("Done!", "Levels are up-to-date!")
             if event.key == pygame.K_F5:
                 world.debug = not world.debug
             if world.debug:
                 if event.key == pygame.K_F7:
-                    world.exportToFile()
-                    print("Saved! Check custom_level.json")
+                    filename = simpledialog.askstring("Save as...", "File Name:", initialvalue="custom_level")
+                    world.exportToFile(filename)
+                    messagebox.showinfo("Saved", "Saved! Check {}.json".format(filename))
                 if event.key == pygame.K_F9:
-                    world.clear()
+                    if messagebox.askyesno("Confirm", "Are you sure to clear the level?"):
+                        world.clear()
                 if event.key == pygame.K_e:
                     world.editBoxState()
             if event.key == pygame.K_r:
