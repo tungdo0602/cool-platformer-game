@@ -169,15 +169,8 @@ class Player():
                 Sound("./assets/Sounds/jump.wav").play()
                 self.vely = -15
         self.rect.x = 0 if self.rect.x < 0 else screen.get_width() if self.rect.x > screen.get_width() else self.rect.x
-        if self.rect.y > screen.get_height() or self.rect.y == -40:
-            self.die = True
-            self.respawn()
-        elif -40 < self.rect.y < 0:
-            dy = screen.get_rect().bottom - self.rect.top
-            self.vely = 0
-        else:
-            self.die = False
-        
+        if self.rect.y < 0:
+            self.vely *= -1
         self.vely += 0.25 if self.inWater else 1
         if self.vely > 10:
             self.vely = 10
@@ -249,9 +242,6 @@ clock = pygame.time.Clock()
 world = World()
 world.load("./levels/lvl_1.json")
 player = Player(*world.respawnPos)
-pygame.mixer.music.load("./assets/sounds/bg.wav")
-pygame.mixer.music.play(loops=-1)
-pygame.mixer.music.set_volume(1)
 while isRunning:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -261,8 +251,6 @@ while isRunning:
                 if messagebox.askyesno("Confirm", "Are you sure to update the level from the cloud?"):
                     gameTools.updateLevels()
                     messagebox.showinfo("Done!", "Levels are up-to-date!")
-            if event.key == pygame.K_F2:
-                pygame.mixer.music.set_volume(float(not pygame.mixer.music.get_volume()))
             if event.key == pygame.K_F5:
                 world.debug = not world.debug
             if world.debug:
