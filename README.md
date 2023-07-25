@@ -8,6 +8,7 @@
 #### G: Set respawn point to current mouse position (debug mode only)
 #### F1: Update (add, replace) level from github levels
 #### F5: Toggle debug mode
+#### F6: Set world size (debug mode only)
 #### F7: Export current level to file (debug mode only)
 #### F9: Clear levels (debug mode only)
 #### Mouse scroll up/down: Change block state (debug mode only)
