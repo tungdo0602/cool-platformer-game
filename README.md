@@ -8,7 +8,6 @@
 #### E: Change block state (debug mode only)
 #### G: Set respawn point to current mouse position (debug mode only)
 #### F1: Update (add, replace) level from github levels
-#### F2: Toggle background music
 #### F5: Toggle debug mode
 #### F7: Export current level to file (debug mode only)
 #### F9: Clear levels (debug mode only)
