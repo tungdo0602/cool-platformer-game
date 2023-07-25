@@ -274,6 +274,7 @@ while isRunning:
                         messagebox.showinfo("Saved", "Saved! Check {}.json".format(filename))
                 if event.key == pygame.K_F8:
                     path = simpledialog.askstring("Path", "Path to next level file:", initialvalue=world.nextLvl)
+                    path = path if path else ""
                     world.nextLvl = path
                     messagebox.showinfo("Done!", "Set new next level path to: " + path)
                 if event.key == pygame.K_F9:
