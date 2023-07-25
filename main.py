@@ -8,7 +8,7 @@ w, h = [800, 500]
 screen = pygame.display.set_mode((w, h), vsync=1)
 pygame.display.set_caption("Cool Platformer :O")
 pygame.display.set_icon(pygame.image.load("./assets/icon.png"))
-ts = 50
+ts = 10
 
 class Box(pygame.Surface):
     def __init__(self, wh=(50, 50), type=1):
@@ -77,7 +77,6 @@ class World():
         global ts, w, h, player
         x, y = map((lambda i: (i//ts)*ts), pygame.mouse.get_pos())
         if type(self.containBox(x, y)) != int and (x >= 0 and x < w) and (y >= 0 and y < h):
-            print(x, y)
             if newSpawnPoint:
                 player.setRespawnPos(x, y)
             else:
@@ -273,6 +272,10 @@ while isRunning:
                     if filename:
                         world.exportToFile(filename)
                         messagebox.showinfo("Saved", "Saved! Check {}.json".format(filename))
+                if event.key == pygame.K_F8:
+                    path = simpledialog.askstring("Path", "Path to next level file:", initialvalue=world.nextLvl)
+                    world.nextLvl = path
+                    messagebox.showinfo("Done!", "Set new next level path to: " + path)
                 if event.key == pygame.K_F9:
                     if messagebox.askyesno("Confirm", "Are you sure to clear the level?"):
                         world.clear()
