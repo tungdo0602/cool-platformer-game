@@ -1,4 +1,4 @@
-import pygame, json, time
+import pygame, json, time, math
 import gameTools
 from tkinter import messagebox, simpledialog
 
@@ -8,7 +8,7 @@ w, h = [800, 500]
 screen = pygame.display.set_mode((w, h), vsync=1)
 pygame.display.set_caption("Cool Platformer :O")
 pygame.display.set_icon(pygame.image.load("./assets/icon.png"))
-ts = 10
+ts = 50
 
 class Box(pygame.Surface):
     def __init__(self, wh=(50, 50), type=1):
@@ -38,10 +38,11 @@ class World():
         self.nextLvl = ""
         self.respawnPos = []
     
-    def load(self, path):
+    def load(self, path, data=None):
         global w, h, ts
+        self.tl = []
         try:
-            self.data = json.loads(open(path).read())
+            self.data = data if data else json.loads(open(path).read())
         except FileNotFoundError:
             self.data = {"respawnPos": [0, 0], "blockSize": 50, "nextLvl": "", "data": [[0]*int(w/ts) for _ in range(int(h/ts))]}
         ts = self.data["blockSize"]
@@ -75,7 +76,8 @@ class World():
     def placeBox(self, newSpawnPoint=False):
         global ts, w, h, player
         x, y = map((lambda i: (i//ts)*ts), pygame.mouse.get_pos())
-        if type(self.containBox(x, y)) != int and x <= w and y <= h:
+        if type(self.containBox(x, y)) != int and (x >= 0 and x < w) and (y >= 0 and y < h):
+            print(x, y)
             if newSpawnPoint:
                 player.setRespawnPos(x, y)
             else:
@@ -103,9 +105,9 @@ class World():
             
     def convertToData(self):
         global ts, w, h, player
-        data = [[0]*int(w/ts) for _ in range(int(h/ts))]
+        data = [[0]*math.ceil(w/ts) for _ in range(math.ceil(h/ts))]
         for i in self.tl:
-            x, y = map((lambda i: int(i)-1), [i.rect.x / ts, i.rect.y / ts])
+            x, y = map((lambda i: int(i)), [i.rect.x / ts, i.rect.y / ts])
             data[y][x] = i.type
         return {
             "respawnPos": player.respawnPos,
@@ -141,7 +143,9 @@ class Player():
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = [x, y]
         self.vely = 0
-        self.speed = 5
+        self.speedx = 0.1
+        self.speedy = -0.33
+        self.fallSpeed = 0.02
         self.onGround = False
         self.inWater = False
         self.respawnPos = [x, y]
@@ -154,7 +158,7 @@ class Player():
         
         dx = dy = 0
         
-        currentSpeed = self.speed / 2 if self.inWater else self.speed
+        currentSpeed = (self.speedx / 2)*ts if self.inWater else self.speedx*ts
         
         if keys[pygame.K_RIGHT] or keys[pygame.K_LEFT]:
             if time.time() - self.now > 0.35 and self.onGround:
@@ -164,10 +168,10 @@ class Player():
             
         if keys[pygame.K_UP] and self.onGround:
             if self.inWater:
-                self.vely = -5
+                self.vely = (self.speedy*ts) / 3
             else:
                 Sound("./assets/Sounds/jump.wav").play()
-                self.vely = -15
+                self.vely = self.speedy*ts
         self.rect.x = 0 if self.rect.x < 0 else screen.get_width() if self.rect.x > screen.get_width() else self.rect.x
         if -40 < self.rect.y < 0:
             self.vely *= -1
@@ -176,7 +180,7 @@ class Player():
             self.respawn()
         else:
             self.die = False
-        self.vely += 0.25 if self.inWater else 1
+        self.vely += (self.fallSpeed*ts)/4 if self.inWater else self.fallSpeed*ts
         if self.vely > 10:
             self.vely = 10
         dy += self.vely
@@ -200,9 +204,7 @@ class Player():
                     self.respawn()
                 elif i.type == 4 and world.nextLvl:
                     Sound("./assets/Sounds/nextLvl.wav", 0.25).play()
-                    newWorld = World()
-                    newWorld.load(world.nextLvl)
-                    world = newWorld
+                    world.load(world.nextLvl)
                     self.setRespawnPos(*world.respawnPos)
                     self.respawn()
                 elif i.type == 5:
@@ -233,10 +235,10 @@ class Player():
                 self.inWater = False
     
     def respawn(self):
+        global player
         if self.die:
             Sound("./assets/Sounds/crash.wav", 0.25).play()
-        self.rect.x, self.rect.y = self.respawnPos
-        self.onGround = self.inWater = False # Reset state #
+        player = Player(*self.respawnPos)
         
     def setRespawnPos(self, x, y):
         self.respawnPos = [x, y]
@@ -259,10 +261,18 @@ while isRunning:
             if event.key == pygame.K_F5:
                 world.debug = not world.debug
             if world.debug:
+                if event.key == pygame.K_F6:
+                    newts = simpledialog.askinteger("New size", "New world size:", initialvalue=ts)
+                    if newts and 5 <= newts <= 1000:
+                        d = world.convertToData()
+                        d["blockSize"] = newts
+                        world.load(None, d)
+                        player.respawn()
                 if event.key == pygame.K_F7:
                     filename = simpledialog.askstring("Save as...", "File Name:", initialvalue="custom_level")
-                    world.exportToFile(filename)
-                    messagebox.showinfo("Saved", "Saved! Check {}.json".format(filename))
+                    if filename:
+                        world.exportToFile(filename)
+                        messagebox.showinfo("Saved", "Saved! Check {}.json".format(filename))
                 if event.key == pygame.K_F9:
                     if messagebox.askyesno("Confirm", "Are you sure to clear the level?"):
                         world.clear()
