@@ -169,8 +169,13 @@ class Player():
                 Sound("./assets/Sounds/jump.wav").play()
                 self.vely = -15
         self.rect.x = 0 if self.rect.x < 0 else screen.get_width() if self.rect.x > screen.get_width() else self.rect.x
-        if self.rect.y < 0:
+        if -40 < self.rect.y < 0:
             self.vely *= -1
+        elif self.rect.y == -40 or self.rect.y > screen.get_height():
+            self.die = True
+            self.respawn()
+        else:
+            self.die = False
         self.vely += 0.25 if self.inWater else 1
         if self.vely > 10:
             self.vely = 10
