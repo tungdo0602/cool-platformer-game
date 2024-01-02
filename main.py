@@ -3,9 +3,10 @@ import gameTools
 from tkinter import messagebox, simpledialog
 
 pygame.init()
-
+pygame.font.init()
+fnt = pygame.font.Font("./assets/font/Roboto.ttf", 20)
 w, h = [800, 500]
-screen = pygame.display.set_mode((w, h), vsync=1)
+screen = pygame.display.set_mode((w, h), vsync=0)
 pygame.display.set_caption("Cool Platformer :O")
 pygame.display.set_icon(pygame.image.load("./assets/icon.png"))
 ts = 10
@@ -159,13 +160,13 @@ class Player():
         
         currentSpeed = (self.speedx / 2)*ts if self.inWater else self.speedx*ts
         
-        if keys[pygame.K_RIGHT] or keys[pygame.K_LEFT]:
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) or (keys[pygame.K_LEFT] or keys[pygame.K_a]):
             if time.time() - self.now > 0.35 and self.onGround:
                 Sound("./assets/Sounds/walk.wav", 0.3).play()
                 self.now = time.time()
-            dx += currentSpeed if keys[pygame.K_RIGHT] else -currentSpeed
+            dx += currentSpeed if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) else -currentSpeed
             
-        if keys[pygame.K_UP] and self.onGround:
+        if (keys[pygame.K_UP] or keys[pygame.K_w]) and self.onGround:
             if self.inWater:
                 self.vely = (self.speedy*ts) / 3
             else:
@@ -305,11 +306,13 @@ while isRunning:
     
     #BG Handler
     screen.fill((255, 255, 255)) #Fill first or it will replace the obj
-    
     # Updater #
     world.update()
     player.update()
+    fps = fnt.render(str(round(clock.get_fps())), False, (0, 0, 255))
+    screen.blit(fps, (0, 0))
     pygame.display.update()
     clock.tick(60)
+    
 
 pygame.quit()
